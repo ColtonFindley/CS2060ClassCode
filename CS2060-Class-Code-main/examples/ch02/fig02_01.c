@@ -7,21 +7,26 @@ int main( void )
 {
    printf( "Welcome to C!\n" );
 
+   // Initializing each variable used
    int length = 0;
    int width = 0;
    int area = 0;
    double average = 0; 
 
+   // User input of the length
    puts( "Enter the length" );
    scanf("%d", &length);
 
+   // User input of the width
    puts("");
    puts("Enter the width");
    scanf("%d", &width);
 
+   // Calculating the area
    area = length * width;
    printf("Length: %d Width: %d Area: %d\n", length, width, area );
 
+   // Calculating the average
    average = ((double)length + (double)width) / 2;
    printf("Average: %.1f", average);
    
