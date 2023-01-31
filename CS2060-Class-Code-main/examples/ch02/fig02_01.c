@@ -6,6 +6,26 @@
 int main( void )
 {
    printf( "Welcome to C!\n" );
+
+   int length = 0;
+   int width = 0;
+   int area = 0;
+   double average = 0;
+
+   puts( "Enter the length" );
+   scanf("%d", &length);
+
+   printf("");
+   puts("Enter the width");
+   scanf("%d", &width);
+
+   area = length * width;
+   printf("Length: %d Width: %d Area: %d\n", length, width, area );
+
+   average = ((double)length + (double)width) / 2;
+   printf("Average: %.1f", average);
+   
+   return 0;
 } // end function main 
 
 
