@@ -10,12 +10,12 @@ int main( void )
    int length = 0;
    int width = 0;
    int area = 0;
-   double average = 0;
+   double average = 0; 
 
    puts( "Enter the length" );
    scanf("%d", &length);
 
-   printf("");
+   puts("");
    puts("Enter the width");
    scanf("%d", &width);
 
