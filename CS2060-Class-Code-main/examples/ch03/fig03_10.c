@@ -13,20 +13,26 @@ int main( void )
 
    // process 10 students using counter-controlled loop 
    while ( student <= 10 ) {
-
       // prompt user for input and obtain value from user 
       printf( "%s", "Enter result ( 1=pass,2=fail ): " );
       scanf( "%d", &result );
 
-      // if result 1, increment passes 
-      if ( result == 1 ) {     
-         passes = passes + 1;
-      } // end if 
-      else { // otherwise, increment failures 
-         failures = failures + 1;
-      } // end else 
+      if (result == 1 || result == 2) {
 
-      student = student + 1; // increment student counter  
+          // if result 1, increment passes 
+          if (result == 1) {
+              passes = passes + 1;
+          } // end if 
+          else { // otherwise, increment failures 
+              failures = failures + 1;
+          } // end else 
+
+          student = student + 1; // increment student counter 
+
+      }
+      else {
+          puts("Invalid Input");
+      }
    } // end while 
 
    // termination phase; display number of passes and failures 
