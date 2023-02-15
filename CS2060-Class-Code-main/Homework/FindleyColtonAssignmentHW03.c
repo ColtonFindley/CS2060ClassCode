@@ -7,7 +7,7 @@
 #define  MAX_CHARGE 12.00 // Largest charge available
 #define MIN_HOURS_AT_FLAT_RATE 3 // Hours that get no extra charge
 #define MAX_HOURS_ALLOWED 24 // Maximum amount of hours
-double getValidNumber(double hours);
+double getValidNumber(double hours, int validNumber);
 double calculations(double charge); // Calculates the charge
 void endDisplay(int count, double totalHours, double totalCharge); // Displays the total cars, hours, and charge
 
@@ -27,8 +27,8 @@ int main(void) {
 	// Loop untill the user enters a -1
 	while (hours != -1) {
 
-		hours = getValidNumber(hours);
-		validNumber = 1;
+		hours = getValidNumber(hours, validNumber);
+		validNumber = 1; // When it exits the method, it means the number was valid
 
 		// If user entered a valid number
 		if (validNumber == 1 && hours != -1) {
@@ -60,9 +60,8 @@ int main(void) {
 
 } // End main
 
-double getValidNumber(double hours) {
-	// If hours was less than 0 or more than 24, excluding -1
-	int validNumber = 0;
+double getValidNumber(double hours, int validNumber) {
+	// If hours was less than 0 or more than 24, excluding -1, or valid number = 0
 	while (hours == 0 || hours != -1 && hours < -1 || hours > MAX_HOURS_ALLOWED || validNumber == 0) {
 		puts("You did not enter a number");
 		puts("Enter the number of hours the car was parked or enter -1 to quit.");
