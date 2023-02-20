@@ -9,6 +9,7 @@ int minimum(const int grades[][EXAMS], size_t pupils, size_t tests);
 int maximum(const int grades[][EXAMS], size_t pupils, size_t tests);
 double average(const int setOfGrades[], size_t tests);
 void printArray(const int grades[][EXAMS], size_t pupils, size_t tests);
+int test(int grades[][EXAMS], size_t pupils, size_t tests);
 
 // function main begins program execution
 int main(void)
@@ -18,6 +19,8 @@ int main(void)
       { { 77, 68, 86, 73 },
         { 96, 87, 89, 78 },
         { 70, 90, 86, 81 } };
+
+   studentGrades[STUDENTS][EXAMS] = test(studentGrades, STUDENTS, EXAMS);
 
    // output array studentGrades
    puts("The array is:");
@@ -106,6 +109,24 @@ void printArray(const int grades[][EXAMS], size_t pupils, size_t tests)
       } 
    } 
 } 
+
+int test(int grades[][EXAMS], size_t pupils, size_t tests) {
+    
+    int userInput = 0;
+    for (size_t i = 0; i < pupils; ++i) {
+
+        for (size_t j = 0; j < tests; j++) {
+            puts("\nEnter student grade: ");
+            scanf("%d", &userInput);
+            while ((getchar()) != '\n');
+            grades[i][j] = userInput;
+        }
+
+    }
+
+    return grades[pupils][tests];
+
+}
 
 /**************************************************************************
  * (C) Copyright 1992-2015 by Deitel & Associates, Inc. and               *
