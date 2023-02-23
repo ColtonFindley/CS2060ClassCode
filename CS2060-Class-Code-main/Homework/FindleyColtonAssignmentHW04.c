@@ -38,7 +38,7 @@ void print1DArray(const double grades[], size_t categories) {
 	puts("The category weights are");
 
 	for (size_t i = 0; i < categories; ++i) {
-		printf("\nCategory %d weight is %.2lf", i+1, grades[i]);
+		printf("\nCategory %llu weight is %.2lf", i+1, grades[i]);
 	}
 
 }
@@ -54,13 +54,13 @@ double enterGrades(double array[][GRADE_CATEGORIES], size_t students, size_t cat
 		for (size_t column = 0; column < categories; ++column) {
 
 			// User entering input
-			printf("Enter the grade for each category for student %d, category %d: ", row+1, column+1);
+			printf("Enter the grade for each category for student %llu, category %llu: ", row+1, column+1);
 			validateInput = scanf("%lf", &array[row][column]);
 			while ((getchar()) != '\n'); // Clear buffer
 
 			// If the user entered data was valid
 			while (validateInput != 1 || array[row][column] < 0 || array[row][column] > 105) {
-				printf("Enter the grade for each category for student %d, category %d: ", row + 1, column + 1);
+				printf("Enter the grade for each category for student %llu, category %llu: ", row + 1, column + 1);
 				validateInput = scanf("%lf", &array[row][column]);
 				while ((getchar()) != '\n'); // Clear buffer
 			}
@@ -77,7 +77,7 @@ void print2DArray(const double array[][GRADE_CATEGORIES], size_t students, size_
 
 	// Iterating through the 2D array
 	for (size_t row = 0; row < students; ++row) {
-		printf("Student %d:", row+1);
+		printf("Student %llu:", row+1);
 		for (size_t column = 0; column < categories; ++column) {
 			printf(" %.1lf ", array[row][column]);
 		}
@@ -111,7 +111,7 @@ void finalPrint(const double finalGrades[], size_t students) {
 	// Iterating through the 1D array
 	for (size_t i = 0; i < students; ++i) {
 		totalAverage += finalGrades[i];
-		printf("Student %d: ", i + 1);
+		printf("Student %llu: ", i + 1);
 
 		// Assigning letter to grade
 		if (finalGrades[i] >= 90) {
