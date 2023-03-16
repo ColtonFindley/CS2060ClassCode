@@ -9,7 +9,7 @@
 
 #define LENGTH 13
 
-void  exploreValidateInt(const char* buff);
+void exploreValidateInt(const char* buff);
 bool validateInt(char* buff, int* const validInt);
 void printLimits();
 
@@ -38,7 +38,6 @@ int main(void)
 }
 
 
-
 void printLimits()
 {
 	printf("The number of bits in a byte %d\n", CHAR_BIT);
@@ -61,28 +60,41 @@ void printLimits()
 }
 
 
-void  exploreValidateInt(const char* buff)
+void exploreValidateInt(const char* buff)
 {
+	// Decalre pointer to a char that will be passed to strotol
 	char* end;
+	// The errno is set to zero at program startup and set to ERANGE if out of range when strtol tires to convert to double
 	errno = 0;
+	// Store integer when it is valid
 	int validInt = 0;
+	// Takes the integer value in the string and moves it to a long
 	long intTest = strtol(buff, &end, 10);
+
+
+	// Checks if the value entered is not a number
 	if (end == buff) {
 		fprintf(stderr, "%s: not a decimal number\n", buff);
 	}
+	// If there was non integer values at the end of the string
 	else if ('\0' != *end) {
 		fprintf(stderr, "%s: extra characters at end of input: %s\n", buff, end);
 	}
+	// If the string was out of bounds on long length
 	else if ((LONG_MIN == intTest || LONG_MAX == intTest) && ERANGE == errno) {
 		fprintf(stderr, "%s out of range of type long\n", buff);
 	}
+	// If the string was out of bounds on int length
 	else if (intTest > INT_MAX) {
 		fprintf(stderr, "%ld greater than INT_MAX\n", intTest);
 	}
+	// If the string was less than int length
 	else if (intTest < INT_MIN) {
 		fprintf(stderr, "%ld less than INT_MIN\n", intTest);
 	}
+	// What was entered was a valid int
 	else {
+		// Converts long to int
 		validInt = (int)intTest;
 		printf("%d is integer value ", validInt);
 	}
