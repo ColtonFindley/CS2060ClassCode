@@ -9,7 +9,7 @@
 
 #define LENGTH 13
 
-void exploreValidateInt(const char* buff);
+bool exploreValidateInt(const char* buff, int* validInt);
 bool validateInt(char* buff, int* const validInt);
 void printLimits();
 
@@ -17,22 +17,27 @@ int main(void)
 {
 	char inputStr[LENGTH]; // create char arintray
 	size_t inputLength = 0;
+	int validInt = 0;
 
 	printLimits();
 
 	for (unsigned int counter = 1; counter < 6; counter++)
 	{
-		puts("\nEnter an integer");
-		fgets(inputStr, LENGTH, stdin);
+		do {
+			puts("\nEnter an integer");
+			fgets(inputStr, LENGTH, stdin);
 
-		inputLength = strnlen(inputStr, LENGTH);
+			inputLength = strnlen(inputStr, LENGTH);
 
-		if (inputLength > 0 && inputStr[inputLength - 1] == '\n')
-		{
-			inputStr[inputLength - 1] = '\0';
-			inputLength--;
-		}
-		exploreValidateInt(inputStr);
+			if (inputLength > 0 && inputStr[inputLength - 1] == '\n')
+			{
+				inputStr[inputLength - 1] = '\0';
+				inputLength--;
+			}
+		} while (!exploreValidateInt(inputStr, &validInt));
+		
+		
+		
 	}
 
 }
@@ -60,16 +65,15 @@ void printLimits()
 }
 
 
-void exploreValidateInt(const char* buff)
+bool exploreValidateInt(const char* buff, int* validInt)
 {
 	// Decalre pointer to a char that will be passed to strotol
 	char* end;
 	// The errno is set to zero at program startup and set to ERANGE if out of range when strtol tires to convert to double
 	errno = 0;
-	// Store integer when it is valid
-	int validInt = 0;
 	// Takes the integer value in the string and moves it to a long
 	long intTest = strtol(buff, &end, 10);
+	bool ifValid = false;
 
 
 	// Checks if the value entered is not a number
@@ -95,7 +99,9 @@ void exploreValidateInt(const char* buff)
 	// What was entered was a valid int
 	else {
 		// Converts long to int
-		validInt = (int)intTest;
-		printf("%d is integer value ", validInt);
+		*validInt = (int)intTest;
+		ifValid = true;
+		printf("%d is integer value ", intTest);
 	}
+	return ifValid;
 }
