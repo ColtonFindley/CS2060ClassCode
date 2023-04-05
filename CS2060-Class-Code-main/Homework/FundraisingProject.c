@@ -1,5 +1,7 @@
 /*
-* Code explanation
+* This program simulates a donation service for an organization. First the organization
+* enters their information. Then the donation screen repeats until the special character
+* is entered, where a summary of the donations is displayed
 */
 
 #include <stdio.h>
@@ -8,113 +10,127 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <time.h>
+#include <ctype.h>
 
-typedef struct org {
-	char orgName[80];
-	char purpose[80];
-	char userName[80];
-	double goalAmount[80];
-	char email[80];
-	char password[80];
-} Organization;
 
-#define PROCESSING_FEE 0.29
+#define PROCESSING_FEE 2.9
 #define LENGTH 80
-void getOrgName(Organization* org);
-void getPurpose(Organization* org);
-void getUserName(Organization* org);
-void getGoalAmount(Organization* org);
+#define BEGINNING "https:donate.com/["
+#define END "]?form=popup#"
+typedef struct org {
+	char orgName[LENGTH];
+	char purpose[LENGTH];
+	char userName[LENGTH];
+	double goalAmount[LENGTH];
+	char email[LENGTH];
+	char password[LENGTH];
+	char url[LENGTH];
+} Organization;
+void getOrgName(char* orgName);
+void getPurpose(char* purpose);
+void getUserName(char* userName);
+void getGoalAmount(char* goalAmount);
 bool validateInt(const char* buff);
-void getEmail(Organization* org);
-void getPassword(Organization* org);
-void createURL(const Organization org);
+void getEmail(char* email);
+void getPassword(char* password);
+void createURL(const char orgName[LENGTH], char* url, const char beginning, const char end);
 void displayInformation(const Organization org, double amtRaised);
-double getDonation(double* amtRaised);
+bool getDonation(double* userDonated, Organization* org);
 void getDonaterName(char* donaterName);
-void zipCode(const double processingFee);
-void receipt(const Organization org, double userDonated);
+void zipCode(const double userDonated, double* amtRaised, double* processingFee);
+void receipt(const char orgName[LENGTH], const double userDonated);
+bool adminValidation(char* email, char* password);
+void endDisplay(const char orgName[LENGTH], const double numDonations, 
+	const double amtRaised, const double processingFee);
 
 
 int main(void) {
 	Organization org;
-	getOrgName(&org);
-	getPurpose(&org);
-	getUserName(&org);
-	getGoalAmount(&org);
-	getEmail(&org);
-	getPassword(&org);
-	//createURL(org);
-	printf("Thank you %s. The URL to raise funds for %s is ", org.userName, org.orgName);
+	getOrgName(org.orgName);
+	getPurpose(org.purpose);
+	getUserName(org.userName);
+	getGoalAmount(org.goalAmount);
+	getEmail(org.email);
+	getPassword(org.password);
+	createURL(org.orgName, org.url, BEGINNING[strlen(BEGINNING)], END[strlen(END)]);
+	printf("Thank you %s. The URL to raise funds for %s is %s", org.userName, org.orgName, org.url);
 
 	double amtRaised = 0;
 	double userDonated = 0;
-	char donaterName[80];
+	char donaterName[LENGTH];
+	double totalProcessingFee = 0;
+	unsigned int donationCounter = 0;
 	displayInformation(org, amtRaised);
-	userDonated = getDonation(&amtRaised);
-	getDonaterName(&donaterName);
-	zipCode(PROCESSING_FEE);
-	receipt(org, userDonated);
 
-
+	
+	while (getDonation(&userDonated, &org)) {
+		donationCounter++;
+		getDonaterName(&donaterName);
+		zipCode(userDonated, &amtRaised, &totalProcessingFee);
+		receipt(org.orgName, userDonated);
+		displayInformation(org, amtRaised);
+	}
+	endDisplay(org.orgName, donationCounter, amtRaised, totalProcessingFee);
 }
 
 // Has the user input the name of the organization
-void getOrgName(Organization* org) {
-	char orgName[80];
+void getOrgName(char* orgName) {
+	char userOrgName[LENGTH];
 	size_t inputLength = 0;
 
 	puts("Enter Fundraising organization name");
-	fgets(orgName, 80, stdin);
-	inputLength = strnlen(orgName, 80);
+	fgets(userOrgName, LENGTH, stdin);
+	inputLength = strnlen(userOrgName, LENGTH);
 
-	if (inputLength > 0 && orgName[inputLength - 1] == '\n') {
-		orgName[inputLength - 1] = '\0';
+	if (inputLength > 0 && userOrgName[inputLength - 1] == '\n') {
+		userOrgName[inputLength - 1] = '\0';
 		inputLength--;
 	}
-	strncpy(org->orgName, orgName, 80);
+	strncpy(orgName, userOrgName, LENGTH);
 }
 
 // Has the user input the purpose of the organization
-void getPurpose(Organization* org) {
-	char purpose[80];
+void getPurpose(char* purpose) {
+	char userPurpose[LENGTH];
 	size_t inputLength = 0;
 
 	puts("\nEnter fundraiser purpose\n");
-	fgets(purpose, 80, stdin);
-	inputLength = strnlen(purpose, 80);
+	fgets(userPurpose, LENGTH, stdin);
+	inputLength = strnlen(userPurpose, LENGTH);
 
-	if (inputLength > 0 && purpose[inputLength - 1] == '\n') {
-		purpose[inputLength - 1] = '\0';
+	if (inputLength > 0 && userPurpose[inputLength - 1] == '\n') {
+		userPurpose[inputLength - 1] = '\0';
 		inputLength--;
 	}
-	strncpy(org->purpose, purpose, 80);
+	strncpy(purpose, userPurpose, LENGTH);
 }
 
 // Has the user enter their first and last name
-void getUserName(Organization* org) {
-	char userName[80];
+void getUserName(char* userName) {
+	char userNameInput[LENGTH];
 	size_t inputLength = 0;
 
 	puts("\nEnter first and last name\n");
-	fgets(userName, 80, stdin);
-	inputLength = strnlen(userName, 80);
+	fgets(userNameInput, LENGTH, stdin);
+	inputLength = strnlen(userNameInput, LENGTH);
 
-	if (inputLength > 0 && userName[inputLength - 1] == '\n') {
-		userName[inputLength - 1] = '\0';
+	if (inputLength > 0 && userNameInput[inputLength - 1] == '\n') {
+		userNameInput[inputLength - 1] = '\0';
 		inputLength--;
 	}
-	strncpy(org->userName, userName, 80);
+	strncpy(userName, userNameInput, LENGTH);
 }
 
 // Has the user enter the goal amount of donations
-void getGoalAmount(Organization* org) {
-	char inputStr[80];
+void getGoalAmount(char* goalAmount) {
+	char inputStr[LENGTH];
 	size_t inputLength = 0;
 		do {
 			puts("Enter the goal amount you want to raise\n");
-			fgets(inputStr, 80, stdin);
+			fgets(inputStr, LENGTH, stdin);
 
-			inputLength = strnlen(inputStr, 80);
+			inputLength = strnlen(inputStr, LENGTH);
 
 			if (inputLength > 0 && inputStr[inputLength - 1] == '\n') {
 				inputStr[inputLength - 1] = '\0';
@@ -122,7 +138,7 @@ void getGoalAmount(Organization* org) {
 			}
 		} while (!validateInt(inputStr));
 
-		strncpy(org->goalAmount, inputStr, 80);
+		strncpy(goalAmount, inputStr, LENGTH);
 	
 }
 
@@ -165,46 +181,101 @@ bool validateInt(const char* buff) {
 }
 
 // Has the user create an email for the fundraiser
-void getEmail(Organization* org) {
-	char userEmail[80];
+void getEmail(char* email) {
+	char userEmail[LENGTH];
+	char emailValid[LENGTH];
+	bool emailLoop = true;
+	size_t inputLength = 0;
+	while (emailLoop) {
+		bool validLoop = true;
+		puts("\nEnter email address");
+		fgets(userEmail, LENGTH, stdin);
+		inputLength = strnlen(userEmail, LENGTH);
 
-	puts("\nEnter email address");
-	fgets(userEmail, 80, stdin);
-	strncpy(org->email, userEmail, 80);
+		if (inputLength > 0 && userEmail[inputLength - 1] == '\n') {
+			userEmail[inputLength - 1] = '\0';
+			inputLength--;
+		}
+		while (validLoop) {
+			printf("\nIs this email correct (y)es or (n)o?: %s\n", userEmail);
+			fgets(emailValid, LENGTH, stdin);
+			inputLength = strnlen(emailValid, LENGTH);
+
+			if (inputLength > 0 && emailValid[inputLength - 1] == '\n') {
+				emailValid[inputLength - 1] = '\0';
+				inputLength--;
+			}
+			char* bufferPtr1;
+			char* bufferPtr2;
+			char* bufferPtr3;
+			char* bufferPtr4;
+
+			bufferPtr1 = strchr(emailValid, 'y');
+			bufferPtr2 = strchr(emailValid, 'Y');
+			bufferPtr3 = strchr(emailValid, 'n');
+			bufferPtr4 = strchr(emailValid, 'N');
+
+			if (bufferPtr1 != NULL || bufferPtr2 != NULL || bufferPtr3 != NULL || bufferPtr4 != NULL) {
+				validLoop = false;
+				if (bufferPtr1 != NULL || bufferPtr2 != NULL) {
+					emailLoop = false;
+				}
+			}
+			else {
+				puts("You did not enter a y or n");
+			}
+
+		} // test loop
+	}
+	strncpy(email, userEmail, LENGTH);
 }
 
 // Has the user enter their password
-void getPassword(Organization* org) {
-	char userPassword[80];
+void getPassword(char* password) {
+	char userPasswordInput[LENGTH];
+	size_t inputLength = 0;
 
 	puts("\nEnter password");
-	fgets(userPassword, 80, stdin);
-	strncpy(org->password, userPassword, 80);
+	fgets(userPasswordInput, LENGTH, stdin);
+	inputLength = strnlen(userPasswordInput, LENGTH);
+
+	if (inputLength > 0 && userPasswordInput[inputLength - 1] == '\n') {
+		userPasswordInput[inputLength - 1] = '\0';
+		inputLength--;
+	}
+	strncpy(password, userPasswordInput, LENGTH);
 }
 
 // Creates the url based on what the user inputed
-void createURL(const Organization org) {
-	char orgName[80];
-	strncpy(orgName, org.orgName, 80);
+void createURL(const char orgName[LENGTH], char* url, const char beginning, const char end) {
+	char tempOrgName[LENGTH];
+	strncpy(tempOrgName, orgName, LENGTH);
 	char* bufferPtr;
-	int numSpaces = 0;
 
-	bufferPtr = strchr(orgName, ' ');
+	bufferPtr = strchr(tempOrgName, ' ');
 
 	while (bufferPtr != NULL) {
-		numSpaces++;
-		//bufferPtr++;
-
-		bufferPtr = strchr(bufferPtr, ' ');
-		bufferPtr = "-";
+		*bufferPtr = '-';
 		bufferPtr++;
+		bufferPtr = strchr(tempOrgName, ' ');
 	} 
+	
+	char tempChar[LENGTH];
+	strncpy(tempChar, "https:donate.com/[", LENGTH);
+	strcat(tempChar, tempOrgName);
+	strcat(tempChar, "]?form=popup#");
+	int test = 0;
+	while ( test < strlen(tempChar)) {
+		tempChar[test] = tolower(tempChar[test]);
+		test++;
+	}
+	strncpy(url, tempChar, LENGTH);
+	
 }
 
 // Displays the user's organization information
 void displayInformation(const Organization org, double amtRaised) {
-	puts("\nURL");
-	puts("\nMAKE A DIFFERENCE BY YOUR DONATION");
+	puts("\n\nMAKE A DIFFERENCE BY YOUR DONATION");
 	printf("\nOrganization: %s", org.orgName);
 	printf("\nPurpose: %s", org.purpose);
 	printf("\nWe have currently raised $%.1lf", amtRaised);
@@ -215,74 +286,86 @@ void displayInformation(const Organization org, double amtRaised) {
 	}
 	else {
 		double percentage = amtRaised / goalAmount;
-		printf("\nWe are %.1lf percent towards our goal of %.1lf", percentage, goalAmount);
+		percentage = percentage * 100;
+		printf("\nWe are %.1lf percent towards our goal of $%.1lf", percentage, goalAmount);
 	}
 }
 
 // Gets the user's donation, and adds it to the total amount raised
-double getDonation(double* amtRaised) {
-	char inputStr[80];
+bool getDonation(double* userDonated, Organization* org) {
+	char inputStr[LENGTH];
 	size_t inputLength = 0;
-	bool valid = true;
+	bool tester = true;
 	char* end;
+	bool adminTest = true;
 	do {
-		do {
+		while (adminTest && tester) {
 			puts("\nEnter the amount you want to donate\n");
-			fgets(inputStr, 80, stdin);
-			inputLength = strnlen(inputStr, 80);
+			fgets(inputStr, LENGTH, stdin);
+			inputLength = strnlen(inputStr, LENGTH);
 
 			if (inputLength > 0 && inputStr[inputLength - 1] == '\n') {
 				inputStr[inputLength - 1] = '\0';
 				inputLength--;
 			}
-			int test = strcmp(inputStr, "0");
-			if (test == 0) {
-				puts("Equal");
-				valid = false;
+
+			char test = inputStr[0];
+
+			if (test == 'q' || test == 'Q') {
+				if (adminValidation(org->email, org->password)) {
+					adminTest = false;
+				}
 			}
 			else {
-				valid = true;
+				char* valid;
+				valid = strchr(&test, '0');
+				if (valid != NULL) {
+					puts("Donation has to be greater than 0");
+				}
+				else {
+					tester = false;
+				}
 			}
-		} while (!valid);
-
-		inputLength = strnlen(inputStr, 80);
+		}
+		inputLength = strnlen(inputStr, LENGTH);
 
 		if (inputLength > 0 && inputStr[inputLength - 1] == '\n') {
 			inputStr[inputLength - 1] = '\0';
 			inputLength--;
 		}
-	} while (!validateInt(inputStr));
+	} while (adminTest && !validateInt(inputStr));
 
-	*amtRaised = *amtRaised + strtod(inputStr, &end);
-	return strtod(inputStr, &end);
+	*userDonated = strtod(inputStr, &end);
+	return adminTest;
 }
 
 // Gets the donater's name
 void getDonaterName(char* donaterName) {
-	char userName[80];
+	char userName[LENGTH];
 	size_t inputLength = 0;
 
 	puts("\nEnter first and last name\n");
-	fgets(userName, 80, stdin);
-	inputLength = strnlen(userName, 80);
+	fgets(userName, LENGTH, stdin);
+	inputLength = strnlen(userName, LENGTH);
 
 	if (inputLength > 0 && userName[inputLength - 1] == '\n') {
 		userName[inputLength - 1] = '\0';
 		inputLength--;
 	}
-	strncpy(donaterName, userName, 80);
+	strncpy(donaterName, userName, LENGTH);
 }
 
 // Asks the user for a zipcode and checks if it was valid
-void zipCode(const double processingFee) {
-	char zipCode[80];
+void zipCode(const double userDonated, double* amtRaised, double* processingFee) {
+	char zipCode[LENGTH];
 	size_t inputLength = 0;
 	bool valid = true;
 	do {
+		valid = true;
 		int count = 0;
 		puts("Enter your 5 digit zipcode");
-		fgets(zipCode, 80, stdin);
-		inputLength = strnlen(zipCode, 80);
+		fgets(zipCode, LENGTH, stdin);
+		inputLength = strnlen(zipCode, LENGTH);
 
 		if (inputLength > 0 && zipCode[inputLength - 1] == '\n') {
 			zipCode[inputLength - 1] = '\0';
@@ -293,7 +376,7 @@ void zipCode(const double processingFee) {
 			valid = false;
 			count++;
 		}
-		else if (valid && zipCode[0] == 48) {
+		else if (valid && zipCode[0] == '0') {
 			puts("Zipcode cannot begin with the number 0");
 			valid = false;
 			count++;
@@ -304,6 +387,14 @@ void zipCode(const double processingFee) {
 		}
 		else if (count == 0) {
 			valid = true;
+			printf("\nThere is a %.1lf percent credit card processing fee of %.1lf. ",
+				PROCESSING_FEE, userDonated);
+			double tempValue = userDonated;
+			double tempProcessingFee = tempValue * (double)(PROCESSING_FEE / 100);
+			*processingFee = *processingFee + tempProcessingFee;
+			double tempUserDonated = tempValue - tempProcessingFee;
+			*amtRaised = *amtRaised + tempUserDonated;
+			printf("%.1lf will be donated", tempUserDonated);
 		}
 	} while (!valid);
 
@@ -311,34 +402,111 @@ void zipCode(const double processingFee) {
 
 // Promts the user if they want a receipt
 // If yes, displays the donation information
-void receipt(const Organization org, double userDonated) {
-	char input[80];
+void receipt(const char orgName[LENGTH], const double userDonated) {
+	char input[LENGTH];
 	size_t inputLength = 0;
-	char valid[80] = { "y,Y,n,N" };
+	bool test = true;
 
-	puts("Do you want a receipt (y)es or (n)o?");
-	fgets(input, 80, stdin);
-	inputLength = strnlen(input, 80);
+	while (test) {
+		puts("\nDo you want a receipt (y)es or (n)o?");
+		fgets(input, LENGTH, stdin);
+		inputLength = strnlen(input, LENGTH);
 
-	if (inputLength > 0 && input[inputLength - 1] == '\n') {
-		input[inputLength - 1] = '\0';
-		inputLength--;
-	}
+		if (inputLength > 0 && input[inputLength - 1] == '\n') {
+			input[inputLength - 1] = '\0';
+			inputLength--;
+		}
 
-	char* bufferPtr;
-	int numSpaces = 0;
+		char* bufferPtr1;
+		char* bufferPtr2;
+		char* bufferPtr3;
+		char* bufferPtr4;
 
-	bufferPtr = strchr(input, 'yYnN');
+		bufferPtr1 = strchr(input, 'y');
+		bufferPtr2 = strchr(input, 'Y');
+		bufferPtr3 = strchr(input, 'n');
+		bufferPtr4 = strchr(input, 'N');
 
-	while (bufferPtr != NULL) {
-		bufferPtr = strchr(bufferPtr, 'yYnN');
-		bufferPtr++;
-		if (bufferPtr != NULL) {
-			puts("Valid");
+		if (bufferPtr1 != NULL || bufferPtr2 != NULL || bufferPtr3 != NULL || bufferPtr4 != NULL) {
+			printf("Organization: %s", orgName);
+			printf("\nDonation Amount ($): %.1lf", userDonated);
+
+			time_t now;
+			time(&now);
+			struct tm* local = localtime(&now);
+			printf("\nTime is: %d/%d/%d %d:%d:%d", local->tm_mday, local->tm_mon+1, local->tm_year+1900, 
+				local->tm_hour-12, local->tm_min, local->tm_sec);
+
+			test = false;
 		}
 		else {
-			puts("Invalid");
+			puts("You did not enter a y or n");
+		}
+
+	} // test loop
+}
+
+// Checks if the email and password are correct
+// If correct, ends the donating loop
+bool adminValidation(char* email, char* password) {
+	bool returnValue = true;
+	bool emailTest = true;
+	bool passwordTest = true;
+	unsigned int emailCount = 0;
+	unsigned int passwordCount = 0;
+	char userEmail[LENGTH];
+	char userPassword[LENGTH];
+	size_t inputLength = 0;
+	while (emailTest) {
+		puts("Enter your email");
+		fgets(userEmail, LENGTH, stdin);
+
+		inputLength = strnlen(userEmail, LENGTH);
+		if (inputLength > 0 && userEmail[inputLength - 1] == '\n') {
+			userEmail[inputLength - 1] = '\0';
+			inputLength--;
+		}
+		int compare = strcmp(userEmail, email);
+		if (compare == 0) {
+			emailTest = false;
+		}
+		else {
+			emailCount++;
+			if (emailCount == 2) {
+				emailTest = false;
+				returnValue = false;
+			}
 		}
 	}
+	while (returnValue && !emailTest && passwordTest) {
+		puts("Enter your password");
+		fgets(userPassword, LENGTH, stdin);
 
+		inputLength = strnlen(userPassword, LENGTH);
+		if (inputLength > 0 && userPassword[inputLength - 1] == '\n') {
+			userPassword[inputLength - 1] = '\0';
+			inputLength--;
+		}
+		int compare = strcmp(userPassword, password);
+		if (compare == 0) {
+			passwordTest = false;
+		}
+		else {
+			passwordCount++;
+			if (passwordCount == 2) {
+				passwordTest = false;
+				returnValue = false;
+			}
+		}
+	}
+	return returnValue;
+}
+
+void endDisplay(const char orgName[LENGTH], const double numDonations,
+	const double amtRaised, const double processingFee) {
+	puts("Donation Summary:");
+	printf("\nOrganization Name: %s", orgName);
+	printf("\nTotal Number of donations: %.1lf", numDonations);
+	printf("\nTotal amount raised: $%.1lf", amtRaised);
+	printf("\nTotal amount paid for credit card processing: $%.1lf", processingFee);
 }
