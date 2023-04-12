@@ -100,23 +100,23 @@ int main(void)
 // 
 void insertNode(Node** headPtr, int number)
 {
-	// 
+	// Allocates memory on the head for the size of the structure
 	Node* newNodePtr = malloc(sizeof(Node));
 
-	// 
+	// // Tetst if there is a memory location
 	if (newNodePtr != NULL)
 	{
-		//
+		// Put data into node
 		newNodePtr->data = number;
-		//
+		// Initialize the next
 		newNodePtr->nextNodePtr = NULL;
 
-		// 
+		// If next node is following
 		Node* previousPtr = NULL;
 		// 
 		Node* currentPtr = *headPtr;
 
-		//
+		// Where to put new node
 		while (currentPtr != NULL && currentPtr->data <= number)
 		{
 			//
