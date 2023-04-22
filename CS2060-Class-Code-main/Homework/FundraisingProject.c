@@ -19,6 +19,8 @@
 #define BEGINNING "https:donate.com/["
 #define END "]?form=popup#"
 #define ATTEMPTS 3
+#define FILE1 "C:\\Fundraiser\\"
+#define FILE2 ".txt"
 typedef struct org {
 	char orgName[LENGTH]; // Name of the organization
 	char purpose[LENGTH]; // Purpose of the organization
@@ -27,6 +29,9 @@ typedef struct org {
 	char email[LENGTH]; // Email of the user
 	char password[LENGTH]; // Password of the user
 	char url[LENGTH]; // Created URL
+	char filePath[LENGTH]; // File Path
+	double amtRaised[LENGTH]; // Amount raised
+	struct org* nextOrg;
 } Organization;
 void getOrgName(char* orgName); // Gets the organization's name
 void getPurpose(char* purpose); // Gets the organization's purpose
@@ -36,22 +41,50 @@ bool validateDouble(const char* buff); // Returns true if the integer entered is
 void getEmail(char* email); // Gets the email of the user of the organization
 void getPassword(char* password); // Gets the password of the user of the organization
 void createURL(const char orgName[LENGTH], char* url); // Creates the URL for the organization
-void displayInformation(double amtRaised, const char url[LENGTH], const char orgName[LENGTH], 
+void getRidOfSpaces(char* string); // Replaces spaces with dashes
+void displayInformation(const double amtRaised[LENGTH], const char url[LENGTH], const char orgName[LENGTH],
 	const char purpose[LENGTH], const char orgGoalAmount[LENGTH]); // Displays the donation information
-bool getDonation(double* userDonated, char* email, char* password); // Gets the donation from the donator, return false if donator enters a q or Q
+bool getDonation(double* userDonated, const char email[LENGTH], const char password[LENGTH]); // Gets the donation from the donator, return false if donator enters a q or Q
 void getDonaterName(char* donaterName); // Gets the donator's name
 void zipCode(const double userDonated, double* amtRaised, double* processingFee); // Gets and validates an entered zipcode
 void receipt(const char orgName[LENGTH], const double userDonated); // If the donator says y or Y, a receipt of their donation is displayed
-bool adminValidation(char* email, char* password); // Returns true if the correct email and password were entered
+bool adminValidation(const char email[LENGTH], const char password[LENGTH]); // Returns true if the correct email and password were entered
+bool equalStrings(const char str1[LENGTH], const char str2[LENGTH]); // Checks if two strings are equal
 void endDisplay(const char orgName[LENGTH], const double numDonations,  
-	const double amtRaised, const double processingFee); // Displays a summary of the total donations
-void newLine(char* string);
-bool yOrN();
+	const double amtRaised[LENGTH], const double processingFee); // Displays a summary of the total donations
+void newLine(char* string); // Gets rid of new line
+bool yOrN(); // Asks for a yes or a no
+void addToList(Organization** headPtr, const Organization org); // Adds the organization to the linked list
+void createFile(char* filePath, const char orgName[LENGTH]); // Creates the file pate
+Organization selectOrg(Organization* headOrg); // Has the user select an organization to donate to
+void printList(Organization* lsitPtr); // Prints the organizations on the list
+Organization checkIfValid(const char name[LENGTH], Organization* list); // Checks for an equal string on the list
+bool validPassword(const char password[LENGTH]); // Checks if the password is valid
+bool numberCheck(const char password[LENGTH]); // Checks if the password has a number
+bool capitalCheck(const char password[LENGTH]); // Checks if the password has a capital letter
+bool lowercaseCheck(const char password[LENGTH]); // Checks if the password has a lowercase letter
 
 
-int main(void) {
-	Organization org; // Organization structure
-	// Set up the organization
+int main(void) {	
+	Organization* headOrgPtr = NULL;
+
+	do {
+		Organization currentOrg;
+		// Set up the organization
+		getOrgName(currentOrg.orgName);
+		getPurpose(currentOrg.purpose);
+		getUserName(currentOrg.userName);
+		getGoalAmount(currentOrg.goalAmount);
+		getEmail(currentOrg.email);
+		getPassword(currentOrg.password);
+		createURL(currentOrg.orgName, currentOrg.url);
+		createFile(currentOrg.filePath, currentOrg.orgName);
+		printf("Thank you %s. The URL to raise funds for %s is %s", currentOrg.userName, currentOrg.orgName, currentOrg.url);
+		addToList(&headOrgPtr, currentOrg);
+		puts("Add another organization? (Y)es or (n)o");
+	} while (!yOrN());
+
+	/*
 	getOrgName(org.orgName);
 	getPurpose(org.purpose);
 	getUserName(org.userName);
@@ -59,26 +92,26 @@ int main(void) {
 	getEmail(org.email);
 	getPassword(org.password);
 	createURL(org.orgName, org.url);
+	*/
 
-	printf("Thank you %s. The URL to raise funds for %s is %s", org.userName, org.orgName, org.url);
+	Organization org = selectOrg(headOrgPtr); // Organization structure
 
-	double amtRaised = 0; // Total amount of money raised
 	double userDonated = 0; // What the user donated before the processing fee
 	char donaterName[LENGTH]; // Name of the donator
 	double totalProcessingFee = 0; // Total amount of money from the processing fee
 	unsigned int donationCounter = 0; // Number of donations
-	displayInformation(amtRaised, org.url, org.orgName, org.purpose, org.goalAmount);
+	displayInformation(org.amtRaised, org.url, org.orgName, org.purpose, org.goalAmount);
 
 	// Loops until the admin enters a q or Q, and the email and password are valid
 	while (getDonation(&userDonated, org.email, org.password)) {
 		donationCounter++;
 		// Donator information
 		getDonaterName(&donaterName);
-		zipCode(userDonated, &amtRaised, &totalProcessingFee);
+		zipCode(userDonated, org.amtRaised, &totalProcessingFee);
 		receipt(org.orgName, userDonated);
-		displayInformation(amtRaised, org.url, org.orgName, org.purpose, org.goalAmount);
+		displayInformation(org.amtRaised, org.url, org.orgName, org.purpose, org.goalAmount);
 	}
-	endDisplay(org.orgName, donationCounter, amtRaised, totalProcessingFee);
+	endDisplay(org.orgName, donationCounter, org.amtRaised, totalProcessingFee);
 }
 
 // Has the user input the name of the organization
@@ -120,6 +153,7 @@ void getUserName(char* userName) {
 // Has the user enter the goal amount of donations
 void getGoalAmount(double* goalAmount) {
 	char inputStr[LENGTH]; // What the user enters
+	char* end;
 
 	// Loops until the user enters a valid number
 		do {
@@ -130,7 +164,8 @@ void getGoalAmount(double* goalAmount) {
 			newLine(inputStr);
 		} while (!validateDouble(inputStr));
 
-		strncpy(goalAmount, inputStr, LENGTH);
+		*goalAmount = strtod(inputStr, &end);
+		//strncpy(goalAmount, inputStr, LENGTH);
 	
 }
 
@@ -199,29 +234,83 @@ void getEmail(char* email) {
 void getPassword(char* password) {
 	char userPasswordInput[LENGTH]; // User entered password
 
-	puts("\nEnter password");
-	fgets(userPasswordInput, LENGTH, stdin);
-	
-	// Getting rid of the new line
-	newLine(userPasswordInput);
+	do {
+		puts("\nEnter password");
+		fgets(userPasswordInput, LENGTH, stdin);
+
+		// Getting rid of the new line
+		newLine(userPasswordInput);
+	} while (!validPassword(userPasswordInput));
 	strncpy(password, userPasswordInput, LENGTH);
+}
+
+// Runs through checks if the entered password is valid
+bool validPassword(const char password[LENGTH]) {
+	size_t length = 0;
+	length = strlen(password);
+	bool check = true;
+
+	// If password is atleast 7 characters
+	if (length < 7) {
+		puts("Password must be atleast 7 characters");
+		check = false;
+	}
+	// If there is a number in the password
+	else if (!numberCheck(password)) {
+		puts("Password must conatin atleast one number");
+		check = false;
+	}
+	// If there is a capital letter in the password
+	else if (!capitalCheck(password)) {
+		puts("Password must contain atleast one capital letter");
+		check = false;
+	}
+	// If there is a lowercase letter in the password
+	else if (!lowercaseCheck(password)) {
+		puts("Password must contian atleast one lowercase letter");
+		check = false;
+	}
+	
+	return check;
+}
+
+bool numberCheck(const char password[LENGTH]) {
+	bool check = false;
+	for (unsigned int i = 48; i < 57; i++) {
+		if (strchr(password, i) != NULL) {
+			check = true;
+		}
+	}
+	return check;
+}
+
+bool capitalCheck(const char password[LENGTH]) {
+	bool check = false;
+	for (unsigned int i = 65; i < 91; i++) {
+		if (strchr(password, i) != NULL) {
+			check = true;
+		}
+	}
+	return check;
+}
+
+bool lowercaseCheck(const char password[LENGTH]) {
+	bool check = false;
+	for (unsigned int i = 97; i < 123; i++) {
+		if (strchr(password, i) != NULL) {
+			check = true;
+		}
+	}
+	return check;
 }
 
 // Creates the url based on what the user inputed
 void createURL(const char orgName[LENGTH], char* url) {
 	char tempOrgName[80]; // Temporary organization name
 	strncpy(tempOrgName, orgName, LENGTH);
-	char* bufferPtr; // Char for strchr return
 
 	// Checks for spaces in the organizations's name
-	bufferPtr = strchr(tempOrgName, ' ');
-	while (bufferPtr != NULL) {
-		// Changes the address of a space to a -
-		// Then moves the pointer along to find another space
-		*bufferPtr = '-';
-		bufferPtr++;
-		bufferPtr = strchr(tempOrgName, ' ');
-	} 
+	getRidOfSpaces(tempOrgName);
 
 	char tempChar[LENGTH]; // For making the URL
 	// Takes the three parts of the URL and combines them
@@ -239,8 +328,21 @@ void createURL(const char orgName[LENGTH], char* url) {
 	
 }
 
+// Changes the spaces to dashes
+void getRidOfSpaces(char* string) {
+	char* bufferPtr; // Char for strchr return
+	bufferPtr = strchr(string, ' ');
+	while (bufferPtr != NULL) {
+		// Changes the address of a space to a -
+		// Then moves the pointer along to find another space
+		*bufferPtr = '-';
+		bufferPtr++;
+		bufferPtr = strchr(string, ' ');
+	}
+}
+
 // Displays the user's organization information
-void displayInformation(double amtRaised, const char url[LENGTH], const char orgName[LENGTH], 
+void displayInformation(const double amtRaised[LENGTH], const char url[LENGTH], const char orgName[LENGTH],
 	const char purpose[LENGTH], const char orgGoalAmount[LENGTH]) {
 	printf("\n\n%s", url);
 	puts("\nMAKE A DIFFERENCE BY YOUR DONATION");
@@ -250,20 +352,21 @@ void displayInformation(double amtRaised, const char url[LENGTH], const char org
 
 	char* end; // Char pointer for strtod
 	double goalAmount = strtod(orgGoalAmount, &end); // String goalAmount converted into a double
+	double tempRaised = strtod(amtRaised, &end);
 	// If the amount raised is greater than the goal amount
-	if (amtRaised >= goalAmount) {
+	if (tempRaised >= goalAmount) {
 		puts("\nWe have reached our goal but could still use donations");
 	}
 	// If the amount raised is less than the goal amount
 	else {
-		double percentage = amtRaised / goalAmount; // Calculates the percentage towards the goal amount
+		double percentage = tempRaised / goalAmount; // Calculates the percentage towards the goal amount
 		percentage = percentage * 100;
 		printf("\nWe are %.1lf percent towards our goal of $%.1lf", percentage, goalAmount);
 	}
 }
 
 // Gets the user's donation, and adds it to the total amount raised
-bool getDonation(double* userDonated, char* email, char* password) {
+bool getDonation(double* userDonated, const char email[LENGTH], const char password[LENGTH]) {
 	char inputStr[LENGTH]; // What the user inputs
 	bool tester = false; // If what the number entered is valid
 	char* end; // Char pointer for strtod
@@ -387,7 +490,7 @@ void receipt(const char orgName[LENGTH], const double userDonated) {
 
 // Checks if the email and password are correct
 // If correct, ends the donating loop
-bool adminValidation(char* email, char* password) {
+bool adminValidation(const char email[LENGTH], const char password[LENGTH]) {
 	bool returnValue = true; // Return value
 	bool emailTest = true; // Expression for the email checks
 	bool passwordTest = true; // Expression for the password checks
@@ -395,59 +498,58 @@ bool adminValidation(char* email, char* password) {
 	unsigned int passwordCount = 0; // Counter for failed password attempts
 	char userEmail[LENGTH]; // What was entered for email
 	char userPassword[LENGTH]; // What was entered for password
-
-	// For the email checks
+	
 	while (emailTest) {
 		puts("Enter your email");
 		fgets(userEmail, LENGTH, stdin);
 
 		// Getting rid of the new line
 		newLine(userEmail);
-
-		int compare = strcmp(userEmail, email); // If the two emails are the same
-		// 0 if they are the same
-		if (compare == 0) {
+		// If strings were equal or not
+		emailTest = !equalStrings(email, userEmail);
+		emailCount++;
+		// If maximum amount of attempts were reached
+		if (emailCount == ATTEMPTS && emailTest) {
 			emailTest = false;
-		}
-		// The emails are not the same
-		else {
-			emailCount++;
-			// If two incorrect attempts have happened
-			if (emailCount == ATTEMPTS) {
-				emailTest = false;
-				returnValue = false;
-			}
+			returnValue = false;
 		}
 	}
-	// For the password checks, if the email was valid, and the return value is true
+
 	while (returnValue && !emailTest && passwordTest) {
 		puts("Enter your password");
 		fgets(userPassword, LENGTH, stdin);
 
 		// Getting rid of the new line
 		newLine(userPassword);
-
-		int compare = strcmp(userPassword, password); // If the two passwords are the same
-		// 0 if the passwords are the same
-		if (compare == 0) {
+		// If strings were equal or not
+		passwordTest = !equalStrings(password, userPassword);
+		passwordCount++;
+		// If maximum amount of attempts were reached
+		if (passwordCount == ATTEMPTS && passwordTest) {
 			passwordTest = false;
-		}
-		// If the passwords were not equal
-		else {
-			passwordCount++;
-			// If two incorrect attemps have happened
-			if (passwordCount == ATTEMPTS) {
-				passwordTest = false;
-				returnValue = false;
-			}
+			returnValue = false;
 		}
 	}
+
 	return returnValue;
+}
+
+// Checks if two strings equal each other
+bool equalStrings(const char str1[LENGTH], const char str2[LENGTH]) {
+	bool test = false; // Expression for the email checks
+
+	int compare = strcmp(str1, str2); // Returns 0 if equal
+	// If strings are equal, return true
+	if (compare == 0) {
+		test = true;
+	}
+	
+	return test;
 }
 
 // Displays the donation summary
 void endDisplay(const char orgName[LENGTH], const double numDonations,
-	const double amtRaised, const double processingFee) {
+	const double amtRaised[LENGTH], const double processingFee) {
 	puts("\nDonation Summary:");
 	printf("Organization Name: %s", orgName);
 	printf("\nTotal Number of donations: %.1lf", numDonations);
@@ -496,4 +598,139 @@ bool yOrN() {
 		}
 	} while (tester);
 	return returnValue;
+}
+
+// Adds to organization to the linked list
+void addToList(Organization** headPtr, const Organization org) {
+	Organization* newPtr = malloc(sizeof(Organization)); // create node
+
+	if (newPtr != NULL) { // is space available
+		//strncpy(newPtr->name, name, 80);
+		//newPtr->age = age; // place value in node
+		*newPtr = org;
+		newPtr->nextOrg = NULL; // node does not link to another node
+
+		Organization* previousPtr = NULL; // Connecting the nodes
+		Organization* currentPtr = *headPtr; // Connecting the nodes
+
+		int compare = 0;
+		if (currentPtr != NULL) {
+			compare = strcmp(org.orgName, currentPtr->orgName);
+		}
+		// loop to find the correct location in the list  
+		while (currentPtr != NULL && compare > 0) {
+			previousPtr = currentPtr; // walk to ...               
+			currentPtr = currentPtr->nextOrg; // ... next node 
+			if (currentPtr->orgName != NULL) {
+				compare = strcmp(org.orgName, currentPtr->orgName);
+			}
+		}
+
+		// insert new node at beginning of list
+		if (previousPtr == NULL) {
+			newPtr->nextOrg = *headPtr;
+			*headPtr = newPtr;
+		}
+		else { // insert new node between previousPtr and currentPtr
+			previousPtr->nextOrg = newPtr;
+			newPtr->nextOrg = currentPtr;
+		}
+	}
+	else {
+		puts("No memory available");
+	}
+}
+
+// Creates the file for the organization
+void createFile(char* filePath, const char orgName[LENGTH]) {
+	char tempName[LENGTH]; // Temporary name so orgName doesn't get changed
+	// Copys for manipulation
+	strncpy(tempName, orgName, LENGTH);
+	strncpy(filePath, FILE1, LENGTH); 
+	getRidOfSpaces(tempName);
+
+	int test = 0; // For iterating
+	// Loops through the URL and makes all letters lowercase
+	while (test < strlen(tempName)) {
+		tempName[test] = tolower(tempName[test]);
+		test++;
+	}
+	// Finishes the name of the file path
+	strcat(filePath, tempName);
+	strcat(filePath, FILE2);
+
+	// Opens the file
+	FILE* filePtr; // Openning the file
+	if ((filePtr = fopen(filePath, "w")) == NULL) {
+		puts("File could not be opened");
+	}
+	fclose(filePtr);
+}
+
+// Selects the organization to donate
+Organization selectOrg(Organization* headOrg) {
+	Organization tempOrg; // Temporary Org
+	char inputOrg[LENGTH]; // User input
+
+	
+	// Asks for the organization, loops until a valid one entered
+	do {
+		puts("\nSelect the organization you would like to make a donation");
+		printList(headOrg);
+		fgets(inputOrg, LENGTH, stdin);
+		newLine(inputOrg);
+		tempOrg = checkIfValid(inputOrg, headOrg);
+	} while (tempOrg.orgName == NULL);
+	return tempOrg;
+}
+
+// Prints the organizations on the list
+void printList(Organization* listPtr) {
+	// If the list is empty
+	if (listPtr != NULL)
+	{
+		Organization* currentPtr = listPtr; // To iterate
+		puts("Organization                   Goal Amount                Current Donations");
+
+		// Prints until iterator is empty
+		while (currentPtr != NULL)
+		{
+			if (*currentPtr->amtRaised < 0) {
+				*currentPtr->amtRaised = 0;
+			}
+			printf("%-31s%-27.1lf%.1lf\n", currentPtr->orgName, *currentPtr->goalAmount, *currentPtr->amtRaised);
+
+			currentPtr = currentPtr->nextOrg;
+		}
+	}
+	else
+	{
+		puts("List is empty");
+	}
+}
+
+// Checks if the name entered exists on the list
+Organization checkIfValid(const char name[LENGTH], Organization* list) {
+	Organization* current = list; // To iterate
+	Organization org; // Return organization
+	bool flag = true;
+
+	// Loops until a valid org is found or the iterator is empty
+	while (current != NULL && flag) {
+		// If a equal string is found
+		if (equalStrings(name, current->orgName)) {
+			current->nextOrg = NULL;
+			org = *current;
+		}
+		else {
+			current = current->nextOrg;
+		}
+	}
+
+	// If no equal string was found
+	if (current == NULL && flag) {
+		puts("Entered organization does not exist\n");
+		puts("Enter organization");
+	}
+	return org;
 }
