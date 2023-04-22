@@ -63,6 +63,9 @@ bool validPassword(const char password[LENGTH]); // Checks if the password is va
 bool numberCheck(const char password[LENGTH]); // Checks if the password has a number
 bool capitalCheck(const char password[LENGTH]); // Checks if the password has a capital letter
 bool lowercaseCheck(const char password[LENGTH]); // Checks if the password has a lowercase letter
+bool validEmail(const char email[LENGTH]); // If the entered email is valid
+void repalaceWithNull(char* email);
+bool emailDomain(char* email, const char* address);
 
 
 int main(void) {	
@@ -217,17 +220,52 @@ void getEmail(char* email) {
 
 	// Loops until the email passes all checks
 	while (emailLoop) {
-		puts("\nEnter email address");
-		fgets(userEmail, LENGTH, stdin);
+		do {
+			puts("\nEnter email address");
+			fgets(userEmail, LENGTH, stdin);
 
-		// Getting rid of the new lien
-		newLine(userEmail);
+			// Getting rid of the new lien
+			newLine(userEmail);
+		} while (!validEmail(userEmail));
 
 		// Asks user if email is correct
 		printf("\nIs this email correct (y)es or (n)o?: %s\n", userEmail);
 		emailLoop = yOrN();
 	}
 	strncpy(email, userEmail, LENGTH);
+}
+
+// If the entered email is valid
+bool validEmail(const char email[LENGTH]) {
+	bool check = true; // Return value
+	char* address; // strchr return
+
+	// If there is a username in the email
+	if (email[0] == '@') {
+		puts("Email must be in the form of [username]@[domain].[3 letter extension]");
+		check = false;
+	}
+	// If there is an @ in the email
+	else if ((address = strchr(email, '@')) == NULL) {
+		puts("Email must be in the form of [username]@[domain].[3 letter extension]");
+		check = false;
+	}
+	// If there is a domain in the email
+	else if (address[1] == '.') {
+		puts("Email must be in the form of [username]@[domain].[3 letter extension]");
+		check = false;
+	}
+	// If there is a period in the email
+	else if ((address = strchr(address, '.')) == NULL) {
+		puts("Email must be in the form of [username]@[domain].[3 letter extension]");
+		check = false;
+	}
+	// If there is a 3 letter extension at the end of the email
+	else if ((strlen(address)) != 4 ) {
+		puts("Email must be in the form of [username]@[domain].[3 letter extension]");
+		check = false;
+	}
+	return check;
 }
 
 // Has the user enter their password
@@ -274,8 +312,10 @@ bool validPassword(const char password[LENGTH]) {
 	return check;
 }
 
+// Checks if the password has a number in it
 bool numberCheck(const char password[LENGTH]) {
-	bool check = false;
+	bool check = false; // Return value
+	// Between ascii values of numbers
 	for (unsigned int i = 48; i < 57; i++) {
 		if (strchr(password, i) != NULL) {
 			check = true;
@@ -284,8 +324,10 @@ bool numberCheck(const char password[LENGTH]) {
 	return check;
 }
 
+// Checks if the password has a capital in it
 bool capitalCheck(const char password[LENGTH]) {
-	bool check = false;
+	bool check = false; // Return value
+	// Between ascii values of capital letters
 	for (unsigned int i = 65; i < 91; i++) {
 		if (strchr(password, i) != NULL) {
 			check = true;
@@ -294,8 +336,10 @@ bool capitalCheck(const char password[LENGTH]) {
 	return check;
 }
 
+// Checks if the password has a lowercase in it
 bool lowercaseCheck(const char password[LENGTH]) {
-	bool check = false;
+	bool check = false; // Return value
+	// Between ascii values of lowercase letters
 	for (unsigned int i = 97; i < 123; i++) {
 		if (strchr(password, i) != NULL) {
 			check = true;
