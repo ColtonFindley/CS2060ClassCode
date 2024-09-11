@@ -21,6 +21,7 @@
 #define FILE1 "C:\\Fundraiser\\"
 #define FILE2 "-receipts.txt"
 #define END_FILE "C:\\Fundraiser\\orgs.txt"
+
 typedef struct org {
 	char orgName[LENGTH]; // Name of the organization
 	char purpose[LENGTH]; // Purpose of the organization
@@ -35,6 +36,7 @@ typedef struct org {
 	double processingFee[LENGTH]; // Processing fee paid
 	struct org* nextOrg; // Pointer to next organization on the list
 } Organization;
+
 void getOrgName(char* orgName); // Gets the organization's name
 void getPurpose(char* purpose); // Gets the organization's purpose
 void getUserName(char* userName); // Gets the organizations user's name
@@ -701,6 +703,7 @@ bool yOrN() {
 
 // Adds to organization to the linked list
 void addToList(Organization** headPtr, const Organization org) {
+	
 	Organization* newPtr = malloc(sizeof(Organization)); // Create node
 
 	// If space is available
